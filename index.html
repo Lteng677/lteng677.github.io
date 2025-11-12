@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>橄榄球对决 - 单人游戏版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0c2461, #1e3799);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(to right, #ff9a00, #ff3c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px;
+            gap: 20px;
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .stats-panel, .control-panel, .player-panel {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .panel-title {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ff3c00;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .field-container {
+            width: 100%;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .football-field {
+            width: 100%;
+            height: 500px;
+            background: #2d5a27;
+            border: 4px solid #fff;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .end-zone {
+            position: absolute;
+            width: 10%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            z-index: 1;
+        }
+
+        .end-zone.left {
+            left: 0;
+        }
+
+        .end-zone.right {
+            right: 0;
+        }
+
+        .yard-line {
+            position: absolute;
+            width: 100%;
+            height: 0;
+            border-top: 2px solid rgba(255, 255, 255, 0.5);
+            z-index: 1;
+        }
+
+        .yard-number {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            top: 5px;
+            z-index: 1;
+        }
+
+        .midfield-line {
+            position: absolute;
+            width: 100%;
+            height: 0;
+            border-top: 4px solid white;
+            top: 50%;
+            z-index: 1;
+        }
+
+        .midfield-mark {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .player {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.5s ease;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .player.p1 {
+            background: #e74c3c;
+            border: 2px solid #c0392b;
+        }
+
+        .player.p2 {
+            background: #3498db;
+            border: 2px solid #2980b9;
+        }
+
+        .ball {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #f1c40f;
+            border-radius: 50%;
+            z-index: 20;
+            transition: all 0.5s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .down-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .play-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .play-option {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .play-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .play-option.p1 {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .play-option.p2 {
+            border-left: 4px solid #3498db;
+        }
+
+        button {
+            background: linear-gradient(to right, #ff9a00, #ff3c00);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        button:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .play-result {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 15px 0;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .player-turn {
+            text-align: center;
+            font-size: 1.3rem;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 60, 0, 0.3);
+        }
+
+        .ai-thinking {
+            text-align: center;
+            font-size: 1.1rem;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(52, 152, 219, 0.3);
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .game-info {
+                grid-template-columns: 1fr;
+            }
+            
+            .play-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>橄榄球对决 - 单人游戏版</h1>
+        <p>挑战AI对手！体验真实的橄榄球比赛流程！</p>
+    </div>
+
+    <div class="game-container">
+        <div class="game-info">
+            <div class="stats-panel">
+                <div class="panel-title">
+                    📊 比赛数据
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">玩家得分</div>
+                        <div class="stat-value" id="player-score">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">AI得分</div>
+                        <div class="stat-value" id="ai-score">0</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">当前档数</div>
+                        <div class="stat-value" id="down">1</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">剩余码数</div>
+                        <div class="stat-value" id="distance">10</div>
+                    </div>
+                </div>
+                
+                <div class="down-info">
+                    <div>节次: <span id="quarter">1</span></div>
+                    <div>时间: <span id="time">15:00</span></div>
+                    <div>球权: <span id="possession">玩家</span></div>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <div class="panel-title">
+                    🎮 游戏控制
+                </div>
+                
+                <div class="player-turn" id="player-turn">
+                    玩家进攻回合
+                </div>
+                
+                <div class="ai-thinking" id="ai-thinking">
+                    AI正在思考战术...
+                </div>
+                
+                <div class="play-result" id="play-result">
+                    游戏准备开始！
+                </div>
+                
+                <div class="controls">
+                    <button id="start-game">开始游戏</button>
+                    <button id="reset-game" disabled>重置游戏</button>
+                </div>
+            </div>
+            
+            <div class="player-panel">
+                <div class="panel-title">
+                    👥 游戏说明
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <div class="panel-title" style="font-size: 1.2rem;">
+                        📋 游戏规则
+                    </div>
+                    <ul style="padding-left: 20px; margin-top: 10px; font-size: 0.9rem;">
+                        <li>玩家和AI轮流进攻和防守</li>
+                        <li>进攻方有4次机会推进10码</li>
+                        <li>达阵得6分</li>
+                        <li>四档失败则攻防转换</li>
+                        <li>每节15分钟，共4节</li>
+                        <li>先达到21分者获胜</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="field-container">
+            <div class="football-field" id="football-field">
+                <!-- 端区 -->
+                <div class="end-zone left">玩家<br>端区</div>
+                <div class="end-zone right">AI<br>端区</div>
+                
+                <!-- 中场线和标记 -->
+                <div class="midfield-line"></div>
+                <div class="midfield-mark">50</div>
+                
+                <!-- 码线 -->
+                <div class="yard-line" style="top: 10%;"></div>
+                <div class="yard-line" style="top: 20%;"></div>
+                <div class="yard-line" style="top: 30%;"></div>
+                <div class="yard-line" style="top: 40%;"></div>
+                <div class="yard-line" style="top: 60%;"></div>
+                <div class="yard-line" style="top: 70%;"></div>
+                <div class="yard-line" style="top: 80%;"></div>
+                <div class="yard-line" style="top: 90%;"></div>
+                
+                <!-- 码数标记 -->
+                <div class="yard-number" style="left: 10%;">10</div>
+                <div class="yard-number" style="left: 20%;">20</div>
+                <div class="yard-number" style="left: 30%;">30</div>
+                <div class="yard-number" style="left: 40%;">40</div>
+                <div class="yard-number" style="left: 60%;">40</div>
+                <div class="yard-number" style="left: 70%;">30</div>
+                <div class="yard-number" style="left: 80%;">20</div>
+                <div class="yard-number" style="left: 90%;">10</div>
+                
+                <!-- 球员和球将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <div class="game-info">
+            <div class="stats-panel">
+                <div class="panel-title">
+                    🎯 玩家战术
+                </div>
+                
+                <div class="play-options">
+                    <div class="play-option p1" data-play="run-play">
+                        <h4>跑球进攻</h4>
+                        <p>稳定推进，风险较低</p>
+                    </div>
+                    <div class="play-option p1" data-play="short-pass">
+                        <h4>短传进攻</h4>
+                        <p>快速短传，中等收益</p>
+                    </div>
+                    <div class="play-option p1" data-play="long-pass">
+                        <h4>长传进攻</h4>
+                        <p>高风险高回报</p>
+                    </div>
+                    <div class="play-option p1" data-play="hail-mary">
+                        <h4>万福玛利亚</h4>
+                        <p>孤注一掷的远程传球</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="panel-title">
+                    🛡️ 玩家防守战术
+                </div>
+                
+                <div class="play-options">
+                    <div class="play-option p2" data-play="run-defense">
+                        <h4>防跑球</h4>
+                        <p>针对跑球战术</p>
+                    </div>
+                    <div class="play-option p2" data-play="short-defense">
+                        <h4>防短传</h4>
+                        <p>针对短传战术</p>
+                    </div>
+                    <div class="play-option p2" data-play="long-defense">
+                        <h4>防长传</h4>
+                        <p>针对长传战术</p>
+                    </div>
+                    <div class="play-option p2" data-play="blitz">
+                        <h4>突袭四分卫</h4>
+                        <p>高风险高回报</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            score: { player: 0, ai: 0 },
+            down: 1,
+            distance: 10,
+            yardLine: 20,
+            quarter: 1,
+            time: 900, // 15分钟每节，以秒计
+            possession: 'player', // 'player' 或 'ai'
+            gameActive: false,
+            playerSelectedPlay: null,
+            aiSelectedPlay: null,
+            waitingForInput: false
+        };
+
+        // 战术数据
+        const plays = {
+            // 进攻战术
+            'run-play': { name: '跑球进攻', baseYards: 4, successRate: 0.7 },
+            'short-pass': { name: '短传进攻', baseYards: 6, successRate: 0.6 },
+            'long-pass': { name: '长传进攻', baseYards: 15, successRate: 0.4 },
+            'hail-mary': { name: '万福玛利亚传球', baseYards: 40, successRate: 0.2 },
+            
+            // 防守战术
+            'run-defense': { name: '防跑球', counter: 'run-play', effectiveness: 0.7 },
+            'short-defense': { name: '防短传', counter: 'short-pass', effectiveness: 0.7 },
+            'long-defense': { name: '防长传', counter: 'long-pass', effectiveness: 0.7 },
+            'blitz': { name: '突袭四分卫', counter: 'hail-mary', effectiveness: 0.6 }
+        };
+
+        // 初始化游戏
+        function initGame() {
+            gameState.gameActive = true;
+            gameState.score = { player: 0, ai: 0 };
+            gameState.down = 1;
+            gameState.distance = 10;
+            gameState.yardLine = 20;
+            gameState.quarter = 1;
+            gameState.time = 900;
+            gameState.possession = 'player';
+            gameState.playerSelectedPlay = null;
+            gameState.aiSelectedPlay = null;
+            gameState.waitingForInput = true;
+            
+            updateUI();
+            setupPlayers();
+            
+            document.getElementById('play-result').textContent = "游戏开始！玩家进攻回合";
+            document.getElementById('start-game').disabled = true;
+            document.getElementById('reset-game').disabled = false;
+            
+            // 启用玩家进攻战术选择
+            enablePlayerControls();
+        }
+
+        // 设置球员位置
+        function setupPlayers() {
+            const field = document.getElementById('football-field');
+            // 清空现有球员
+            field.querySelectorAll('.player, .ball').forEach(el => el.remove());
+            
+            // 根据球权设置进攻和防守方
+            const isPlayerOffense = gameState.possession === 'player';
+            const offenseClass = isPlayerOffense ? 'p1' : 'p2';
+            const defenseClass = isPlayerOffense ? 'p2' : 'p1';
+            
+            // 创建进攻方球员
+            const offensePlayers = [
+                { id: 'qb', x: gameState.yardLine - 5, y: 50, type: 'offense', label: 'QB', playerClass: offenseClass },
+                { id: 'rb', x: gameState.yardLine - 10, y: 40, type: 'offense', label: 'RB', playerClass: offenseClass },
+                { id: 'wr1', x: gameState.yardLine - 15, y: 30, type: 'offense', label: 'WR', playerClass: offenseClass },
+                { id: 'wr2', x: gameState.yardLine - 15, y: 70, type: 'offense', label: 'WR', playerClass: offenseClass },
+                { id: 'te', x: gameState.yardLine - 8, y: 60, type: 'offense', label: 'TE', playerClass: offenseClass }
+            ];
+            
+            // 创建防守方球员
+            const defensePlayers = [
+                { id: 'dl1', x: gameState.yardLine + 15, y: 40, type: 'defense', label: 'DL', playerClass: defenseClass },
+                { id: 'dl2', x: gameState.yardLine + 15, y: 60, type: 'defense', label: 'DL', playerClass: defenseClass },
+                { id: 'lb1', x: gameState.yardLine + 25, y: 30, type: 'defense', label: 'LB', playerClass: defenseClass },
+                { id: 'lb2', x: gameState.yardLine + 25, y: 70, type: 'defense', label: 'LB', playerClass: defenseClass },
+                { id: 'cb1', x: gameState.yardLine + 35, y: 20, type: 'defense', label: 'CB', playerClass: defenseClass },
+                { id: 'cb2', x: gameState.yardLine + 35, y: 80, type: 'defense', label: 'CB', playerClass: defenseClass },
+                { id: 's', x: gameState.yardLine + 45, y: 50, type: 'defense', label: 'S', playerClass: defenseClass }
+            ];
+            
+            // 添加球员到球场
+            [...offensePlayers, ...defensePlayers].forEach(player => {
+                const playerEl = document.createElement('div');
+                playerEl.className = `player ${player.playerClass}`;
+                playerEl.id = player.id;
+                playerEl.textContent = player.label;
+                playerEl.style.left = `${Math.max(5, Math.min(95, player.x))}%`;
+                playerEl.style.top = `${player.y}%`;
+                field.appendChild(playerEl);
+            });
+            
+            // 添加橄榄球
+            const ball = document.createElement('div');
+            ball.className = 'ball';
+            ball.id = 'football';
+            ball.style.left = `${gameState.yardLine}%`;
+            ball.style.top = '50%';
+            field.appendChild(ball);
+        }
+
+        // 启用玩家控制
+        function enablePlayerControls() {
+            if (!gameState.gameActive || !gameState.waitingForInput) return;
+            
+            // 禁用所有控制
+            document.querySelectorAll('.play-option').forEach(option => {
+                option.style.pointerEvents = 'none';
+                option.style.opacity = '0.5';
+            });
+            
+            // 根据当前回合启用相应控制
+            if (gameState.possession === 'player') {
+                // 玩家回合 - 启用进攻战术
+                document.querySelectorAll('.play-option.p1').forEach(option => {
+                    option.style.pointerEvents = 'auto';
+                    option.style.opacity = '1';
+                });
+                document.getElementById('player-turn').textContent = "玩家进攻回合 - 选择进攻战术";
+            } else {
+                // AI回合 - 玩家需要防守
+                document.querySelectorAll('.play-option.p2').forEach(option => {
+                    option.style.pointerEvents = 'auto';
+                    option.style.opacity = '1';
+                });
+                document.getElementById('player-turn').textContent = "AI进攻回合 - 选择防守战术";
+            }
+        }
+
+        // 玩家选择战术
+        function playerSelectPlay(playType) {
+            if (!gameState.gameActive || !gameState.waitingForInput) return;
+            
+            gameState.playerSelectedPlay = playType;
+            gameState.waitingForInput = false;
+            
+            // 禁用玩家控制
+            document.querySelectorAll('.play-option').forEach(option => {
+                option.style.pointerEvents = 'none';
+                option.style.opacity = '0.5';
+            });
+            
+            // 显示AI思考中
+            document.getElementById('ai-thinking').style.display = 'block';
+            
+            // AI选择战术 - 间隔3秒
+            setTimeout(() => {
+                aiSelectPlay();
+            }, 3000);
+        }
+
+        // AI选择战术
+        function aiSelectPlay() {
+            document.getElementById('ai-thinking').style.display = 'none';
+            
+            if (gameState.possession === 'player') {
+                // AI防守回合 - 玩家进攻
+                const defensivePlays = ['run-defense', 'short-defense', 'long-defense', 'blitz'];
+                
+                // 根据玩家选择的战术智能选择防守
+                let selectedPlay;
+                if (gameState.playerSelectedPlay) {
+                    // 如果知道玩家选择的战术，针对性防守
+                    const playerPlay = gameState.playerSelectedPlay;
+                    if (playerPlay === 'run-play') selectedPlay = 'run-defense';
+                    else if (playerPlay === 'short-pass') selectedPlay = 'short-defense';
+                    else if (playerPlay === 'long-pass') selectedPlay = 'long-defense';
+                    else selectedPlay = 'blitz';
+                } else {
+                    // 随机选择防守战术
+                    selectedPlay = defensivePlays[Math.floor(Math.random() * defensivePlays.length)];
+                }
+                
+                gameState.aiSelectedPlay = selectedPlay;
+            } else {
+                // AI进攻回合
+                const offensivePlays = ['run-play', 'short-pass', 'long-pass', 'hail-mary'];
+                
+                // 根据场上情况智能选择
+                let selectedPlay;
+                if (gameState.down === 1) {
+                    // 一档通常选择保守战术
+                    selectedPlay = Math.random() < 0.7 ? 'run-play' : 'short-pass';
+                } else if (gameState.down === 2) {
+                    if (gameState.distance <= 5) {
+                        selectedPlay = Math.random() < 0.6 ? 'run-play' : 'short-pass';
+                    } else {
+                        selectedPlay = Math.random() < 0.5 ? 'short-pass' : 'long-pass';
+                    }
+                } else if (gameState.down === 3) {
+                    if (gameState.distance <= 3) {
+                        selectedPlay = 'run-play';
+                    } else if (gameState.distance <= 10) {
+                        selectedPlay = Math.random() < 0.6 ? 'short-pass' : 'long-pass';
+                    } else {
+                        selectedPlay = Math.random() < 0.7 ? 'long-pass' : 'hail-mary';
+                    }
+                } else {
+                    // 四档决策
+                    if (gameState.yardLine > 60) {
+                        selectedPlay = Math.random() < 0.5 ? 'short-pass' : 'long-pass';
+                    } else {
+                        selectedPlay = Math.random() < 0.3 ? 'long-pass' : 'hail-mary';
+                    }
+                }
+                
+                gameState.aiSelectedPlay = selectedPlay;
+            }
+            
+            executePlay();
+        }
+
+        // 执行战术
+        function executePlay() {
+            let offensivePlay, defensivePlay;
+            
+            if (gameState.possession === 'player') {
+                // 玩家进攻，AI防守
+                offensivePlay = gameState.playerSelectedPlay;
+                defensivePlay = gameState.aiSelectedPlay;
+            } else {
+                // AI进攻，玩家防守
+                offensivePlay = gameState.aiSelectedPlay;
+                defensivePlay = gameState.playerSelectedPlay;
+            }
+            
+            // 计算战术结果
+            const yardsGained = calculatePlayResult(offensivePlay, defensivePlay);
+            const resultText = getPlayResultText(offensivePlay, defensivePlay, yardsGained);
+            
+            // 更新游戏状态
+            updateGameState(yardsGained, resultText);
+            
+            // 简单动画效果
+            animatePlay(yardsGained);
+            
+            // 重置选择的战术
+            gameState.playerSelectedPlay = null;
+            gameState.aiSelectedPlay = null;
+            
+            // 动画结束后重新启用玩家控制 - 间隔3秒
+            setTimeout(() => {
+                if (gameState.gameActive) {
+                    gameState.waitingForInput = true;  // 关键修复：重新设置为true
+                    enablePlayerControls();
+                }
+            }, 3000);
+        }
+
+        // 计算战术结果
+        function calculatePlayResult(offensivePlay, defensivePlay) {
+            const play = plays[offensivePlay];
+            let baseYards = play.baseYards;
+            let successRate = play.successRate;
+            
+            // 根据防守战术调整成功率
+            if (defensivePlay && plays[defensivePlay].counter === offensivePlay) {
+                successRate *= plays[defensivePlay].effectiveness;
+            }
+            
+            // 应用成功率
+            if (Math.random() > successRate) {
+                return 0; // 战术失败
+            }
+            
+            // 添加随机变化
+            const variation = Math.floor(Math.random() * 5) - 2; // -2 到 +2 码的变化
+            return Math.max(0, baseYards + variation);
+        }
+
+        // 获取战术结果文本
+        function getPlayResultText(offensivePlay, defensivePlay, yardsGained) {
+            const offensePlayer = gameState.possession === 'player' ? '玩家' : 'AI';
+            const defensePlayer = gameState.possession === 'player' ? 'AI' : '玩家';
+            
+            let result = `${offensePlayer}使用${plays[offensivePlay].name}，${defensePlayer}使用${defensivePlay ? plays[defensivePlay].name : '默认防守'}。`;
+            
+            if (yardsGained <= 0) {
+                result += " 防守成功！没有获得码数";
+            } else if (yardsGained >= (80 - gameState.yardLine)) {
+                result += " 达阵得分！";
+            } else {
+                result += ` 获得了 ${yardsGained} 码`;
+            }
+            
+            return result;
+        }
+
+        // 动画效果
+        function animatePlay(yards) {
+            const ball = document.getElementById('football');
+            const currentX = parseFloat(ball.style.left);
+            const targetX = currentX + (yards / 100) * 80; // 转换为百分比
+            
+            // 确保不超过端区
+            const finalX = Math.min(targetX, 90);
+            
+            // 移动球
+            ball.style.transition = 'all 1.5s ease';
+            ball.style.left = `${finalX}%`;
+        }
+
+        // 更新游戏状态
+        function updateGameState(yardsGained, resultText) {
+            // 显示回合结果
+            document.getElementById('play-result').textContent = resultText;
+            
+            // 更新码线位置
+            gameState.yardLine += yardsGained;
+            
+            // 检查是否达阵
+            if (gameState.yardLine >= 80) {
+                const scoringPlayer = gameState.possession;
+                gameState.score[scoringPlayer] += 6;
+                document.getElementById('play-result').textContent += ` ${scoringPlayer === 'player' ? '玩家' : 'AI'}达阵！获得6分！`;
+                
+                // 检查游戏是否结束
+                if (gameState.score[scoringPlayer] >= 21) {
+                    document.getElementById('play-result').textContent += ` ${scoringPlayer === 'player' ? '玩家' : 'AI'}获胜！`;
+                    gameState.gameActive = false;
+                    gameState.waitingForInput = false;
+                    document.querySelectorAll('.play-option').forEach(option => {
+                        option.style.pointerEvents = 'none';
+                        option.style.opacity = '0.5';
+                    });
+                } else {
+                    resetAfterScore();
+                }
+                
+                updateUI();
+                return;
+            }
+            
+            // 更新档数和剩余码数
+            gameState.distance -= yardsGained;
+            
+            if (gameState.distance <= 0) {
+                // 获得新的首攻
+                gameState.down = 1;
+                gameState.distance = 10;
+                document.getElementById('play-result').textContent += " 首攻！";
+            } else {
+                // 进入下一档
+                gameState.down++;
+            }
+            
+            // 检查是否四档失败
+            if (gameState.down > 4) {
+                document.getElementById('play-result').textContent += " 四档失败！攻防转换";
+                gameState.possession = gameState.possession === 'player' ? 'ai' : 'player';
+                gameState.down = 1;
+                gameState.distance = 10;
+                gameState.yardLine = 100 - gameState.yardLine; // 攻防转换后球场位置
+            }
+            
+            // 更新时间 - 每次进攻消耗10秒
+            gameState.time = Math.max(0, gameState.time - 10);
+            if (gameState.time <= 0) {
+                gameState.quarter++;
+                if (gameState.quarter > 4) {
+                    // 游戏结束
+                    gameState.gameActive = false;
+                    gameState.waitingForInput = false;
+                    document.getElementById('play-result').textContent += " 比赛结束！";
+                    document.querySelectorAll('.play-option').forEach(option => {
+                        option.style.pointerEvents = 'none';
+                        option.style.opacity = '0.5';
+                    });
+                } else {
+                    gameState.time = 900; // 重置为15分钟
+                }
+            }
+            
+            updateUI();
+            setupPlayers(); // 重新设置球员位置
+        }
+
+        // 得分后重置
+        function resetAfterScore() {
+            gameState.down = 1;
+            gameState.distance = 10;
+            gameState.yardLine = 20;
+            gameState.possession = gameState.possession === 'player' ? 'ai' : 'player';
+        }
+
+        // 更新UI显示
+        function updateUI() {
+            document.getElementById('player-score').textContent = gameState.score.player;
+            document.getElementById('ai-score').textContent = gameState.score.ai;
+            document.getElementById('down').textContent = gameState.down;
+            document.getElementById('distance').textContent = gameState.distance;
+            document.getElementById('quarter').textContent = gameState.quarter;
+            document.getElementById('possession').textContent = gameState.possession === 'player' ? '玩家' : 'AI';
+            
+            // 更新时间显示
+            const minutes = Math.floor(gameState.time / 60);
+            const seconds = gameState.time % 60;
+            document.getElementById('time').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        // 事件监听
+        document.getElementById('start-game').addEventListener('click', initGame);
+        document.getElementById('reset-game').addEventListener('click', () => {
+            location.reload(); // 简单重置，重新加载页面
+        });
+        
+        // 玩家战术选择事件
+        document.querySelectorAll('.play-option').forEach(option => {
+            option.addEventListener('click', () => {
+                playerSelectPlay(option.dataset.play);
+            });
+        });
+
+        // 初始化UI
+        updateUI();
+    </script>
+</body>
+</html>
